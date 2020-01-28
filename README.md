@@ -9,3 +9,6 @@ Funciones de esta CLT
 
 TODOs
 - Connotaciones
+
+NOTAS
+- Compilar de la fuente requiere Rust nightly (para rustyline)

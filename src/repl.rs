@@ -9,7 +9,9 @@ use rustyline::{CompletionType, Context};
 use rustyline::{Editor, Helper};
 use std::borrow::Cow;
 
-static ACTIONS: &[&str] = &["hi", "there"];
+use crate::cards::list_cards;
+
+static ACTIONS: &[&str] = &["ls", "pr"];
 static PROMPT: &str = "> ";
 
 fn byebye() {
@@ -89,7 +91,12 @@ fn repl<T: rustyline::Helper>(editor: &mut Editor<T>) {
                 "exit" => {
                     byebye();
                     break;
-                }
+                },
+                "ls" => list_cards(),
+                // TODO 
+                "practice" => panic!("Do this"),
+                // TODO 
+                "save" => panic!("Do this"),
                 _ => (),
             },
             Err(ReadlineError::Eof) => {

@@ -1,5 +1,6 @@
 use clap::{App, Arg};
 
+mod cards;
 mod repl;
 
 fn main() {
