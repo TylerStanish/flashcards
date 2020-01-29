@@ -11,7 +11,6 @@ use std::borrow::Cow;
 
 use crate::cards::list_cards;
 
-static ACTIONS: &[&str] = &["ls", "pr"];
 static PROMPT: &str = "> ";
 
 fn byebye() {
