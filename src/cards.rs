@@ -47,17 +47,13 @@ mod tests {
         let filename = Uuid::new_v4().to_string();
         let directory = tempfile::tempdir_in(".").unwrap();
         let res = super::create_or_open(directory.path().join(filename));
-        if !res.is_ok() {
-            res.unwrap();
-        }
+        res.unwrap();
     }
 
     #[test]
     fn creates_cards_file_if_exists() {
         let file = tempfile::NamedTempFile::new_in(".").unwrap();
         let res = super::create_or_open(file.path());
-        if !res.is_ok() {
-            res.unwrap();
-        }
+        res.unwrap();
     }
 }
