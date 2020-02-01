@@ -34,7 +34,13 @@ impl Card {
 
     pub fn persist(&self) {
         let mut file = create_or_open(CARDS_FILE).unwrap();
-        writeln!(file, "some card").expect("Could not write to card file");
+        writeln!(file, "{}", self.to_string()).expect("Could not write to card file");
+    }
+}
+
+impl ToString for Card {
+    fn to_string(&self) -> String {
+        format!("{},{},{}", self.word, self.translation, self.last_practiced)
     }
 }
 
@@ -63,6 +69,21 @@ pub fn list_cards() {
         stdin.write(&[unwrapped.as_bytes(), "\n".as_bytes()].concat()).unwrap();
     }
     res.wait().unwrap();
+}
+
+pub fn create_card() {
+    print!("Word: ");
+    // according to this: https://internals.rust-lang.org/t/create-a-flushing-version-of-print/9870/12
+    // we don't need to lock() explicitly
+    io::stdout().flush().unwrap();
+    let mut word = String::new();
+    io::stdin().read_line(&mut word).unwrap();
+
+    let mut translation = String::new();
+    print!("Translation: ");
+    io::stdout().flush().unwrap();
+    io::stdin().read_line(&mut translation).unwrap();
+    Card::new(word.trim().to_string(), translation.trim().to_string()).persist();
 }
 
 #[cfg(test)]

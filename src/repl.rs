@@ -9,7 +9,7 @@ use rustyline::{CompletionType, Context};
 use rustyline::{Editor, Helper};
 use std::borrow::Cow;
 
-use crate::cards::{Card, list_cards};
+use crate::cards::{Card, create_card, list_cards};
 
 static PROMPT: &str = "> ";
 
@@ -92,10 +92,8 @@ fn repl<T: rustyline::Helper>(editor: &mut Editor<T>) {
                     break;
                 },
                 "ls" => list_cards(),
-                // TODO 
                 "practice" => panic!("Do this"),
-                // TODO 
-                "save" => Card::new("the word".to_string(), "the translation".to_string()).persist(),
+                "save" => create_card(),
                 _ => (),
             },
             Err(ReadlineError::Eof) => {
