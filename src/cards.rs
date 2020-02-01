@@ -1,21 +1,13 @@
 use std::env;
-use std::fs::{File, OpenOptions};
-use std::io::{self, BufRead, BufReader, BufWriter, Result as IOResult, Read, Write};
-use std::path::Path;
+use std::fs::{File};
+use std::io::{self, BufRead, BufReader, BufWriter, Read, Write};
 use std::process::{Command, Stdio};
+use std::str::FromStr;
 
 use chrono::{DateTime, Utc};
+use crate::io::{create_or_open, random_line};
 
 static CARDS_FILE: &'static str = "cards.txt";
-
-fn create_or_open<P: AsRef<Path>>(path: P) -> IOResult<File> {
-    OpenOptions::new()
-        .read(true)
-        .write(true)
-        .append(true)
-        .create(true)
-        .open(path)
-}
 
 pub struct Card {
     word: String,
@@ -24,17 +16,32 @@ pub struct Card {
 }
 
 impl Card {
-    pub fn new(word: String, translation: String) -> Self {
+    pub fn create(word: String, translation: String) -> Self {
+        Card::new(word, translation, Utc::now())
+    }
+
+    pub fn new(word: String, translation: String, last_practiced: DateTime<Utc>) -> Self {
         Card {
             word,
             translation,
-            last_practiced: Utc::now(),
+            last_practiced: last_practiced,
         }
     }
 
     pub fn persist(&self) {
         let mut file = create_or_open(CARDS_FILE).unwrap();
         writeln!(file, "{}", self.to_string()).expect("Could not write to card file");
+    }
+}
+
+impl FromStr for Card {
+    type Err = String;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let mut split = s.split(",");
+        let word = split.nth(0).unwrap();
+        let translation = split.nth(1).unwrap();
+        let last_practiced = DateTime::from_str(split.nth(2).unwrap()).unwrap();
+        Ok(Card::new(word.to_string(), translation.to_string(), last_practiced))
     }
 }
 
@@ -83,7 +90,13 @@ pub fn create_card() {
     print!("Translation: ");
     io::stdout().flush().unwrap();
     io::stdin().read_line(&mut translation).unwrap();
-    Card::new(word.trim().to_string(), translation.trim().to_string()).persist();
+    Card::create(word.trim().to_string(), translation.trim().to_string()).persist();
+}
+
+pub fn practice() {
+    // get random word
+    let line = random_line(CARDS_FILE);
+    println!("{}", line);
 }
 
 #[cfg(test)]
