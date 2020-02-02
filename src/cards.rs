@@ -38,16 +38,17 @@ impl FromStr for Card {
     type Err = String;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut split = s.split(",");
-        let word = split.nth(0).unwrap();
-        let translation = split.nth(1).unwrap();
-        let last_practiced = DateTime::from_str(split.nth(2).unwrap()).unwrap();
+        let word = split.next().unwrap();
+        let translation = split.next().unwrap();
+        let date_str = split.next().unwrap();
+        let last_practiced = DateTime::parse_from_rfc3339(date_str).unwrap().with_timezone(&Utc);
         Ok(Card::new(word.to_string(), translation.to_string(), last_practiced))
     }
 }
 
 impl ToString for Card {
     fn to_string(&self) -> String {
-        format!("{},{},{}", self.word, self.translation, self.last_practiced)
+        format!("{},{},{}", self.word, self.translation, self.last_practiced.to_rfc3339())
     }
 }
 
@@ -96,7 +97,18 @@ pub fn create_card() {
 pub fn practice() {
     // get random word
     let line = random_line(CARDS_FILE);
-    println!("{}", line);
+    let card: Card = Card::from_str(line.as_str()).unwrap();
+    println!("{}", card.translation);
+    print!("Enter word for this translation: ");
+    io::stdout().flush().unwrap();
+    let mut attempt = String::new();
+    io::stdin().read_line(&mut attempt).unwrap();
+    if !attempt.trim().eq_ignore_ascii_case(&card.word) {
+        println!("Incorrect.");
+    } else {
+        println!("Correct!");
+        // TODO update last_practiced in file
+    }
 }
 
 #[cfg(test)]
