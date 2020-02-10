@@ -6,7 +6,7 @@ use std::str::FromStr;
 
 use chrono::{DateTime, Utc};
 use rand::{self, Rng, distributions::{Distribution, Uniform}};
-use crate::io::{create_or_open};
+use crate::io::{create_or_open, create_or_open_overwrite};
 
 static CARDS_FILE: &'static str = "cards.txt";
 
@@ -102,23 +102,24 @@ pub fn create_card(cards: &mut Vec<Card>) {
 }
 
 fn save_cards(cards: &Vec<Card>) {
-    let mut writer = BufWriter::new(create_or_open(CARDS_FILE).unwrap());
+    let mut writer = BufWriter::new(create_or_open_overwrite(CARDS_FILE).unwrap());
     for card in cards {
         writer.write(card.to_string().as_bytes()).unwrap();
         writer.write("\n".as_bytes()).unwrap();
     }
 }
 
-pub fn random_card(cards: &Vec<Card>) -> &Card {
+pub fn random_index<T>(items: &[T]) -> usize {
     let mut rng = rand::thread_rng();
-    let range = Uniform::new_inclusive(0, cards.len() - 1);
+    let range = Uniform::new_inclusive(0, items.len() - 1);
     let index = range.sample(&mut rng);
-    cards.iter().nth(index).unwrap()
+    index
 }
 
 pub fn practice(cards: &mut Vec<Card>) {
     // get random word
-    let card = random_card(cards);
+    let index = random_index(cards);
+    let card = cards.iter().nth(index).unwrap();
     println!("{}", card.translation);
     print!("Enter word for this translation: ");
     io::stdout().flush().unwrap();
@@ -129,6 +130,8 @@ pub fn practice(cards: &mut Vec<Card>) {
     } else {
         println!("Correct!");
         // TODO update last_practiced in file
+        cards[index].last_practiced = Utc::now();
+        save_cards(cards);
     }
 }
 
