@@ -5,7 +5,8 @@ use std::process::{Command, Stdio};
 use std::str::FromStr;
 
 use chrono::{DateTime, Utc};
-use crate::io::{create_or_open, random_line};
+use rand::{self, Rng, distributions::{Distribution, Uniform}};
+use crate::io::{create_or_open};
 
 static CARDS_FILE: &'static str = "cards.txt";
 
@@ -27,11 +28,6 @@ impl Card {
             last_practiced: last_practiced,
         }
     }
-
-    pub fn persist(&self) {
-        let mut file = create_or_open(CARDS_FILE).unwrap();
-        writeln!(file, "{}", self.to_string()).expect("Could not write to card file");
-    }
 }
 
 impl FromStr for Card {
@@ -50,6 +46,16 @@ impl ToString for Card {
     fn to_string(&self) -> String {
         format!("{},{},{}", self.word, self.translation, self.last_practiced.to_rfc3339())
     }
+}
+
+pub fn get_cards() -> Vec<Card> {
+    let file = create_or_open(CARDS_FILE).expect("Could not create or open the flashcards file");
+    let reader = BufReader::new(file);
+    let mut cards = Vec::new();
+    for line in reader.lines() {
+        cards.push(Card::from_str(&line.unwrap()).unwrap());
+    }
+    cards
 }
 
 pub fn list_cards() {
@@ -79,7 +85,7 @@ pub fn list_cards() {
     res.wait().unwrap();
 }
 
-pub fn create_card() {
+pub fn create_card(cards: &mut Vec<Card>) {
     print!("Word: ");
     // according to this: https://internals.rust-lang.org/t/create-a-flushing-version-of-print/9870/12
     // we don't need to lock() explicitly
@@ -91,13 +97,28 @@ pub fn create_card() {
     print!("Translation: ");
     io::stdout().flush().unwrap();
     io::stdin().read_line(&mut translation).unwrap();
-    Card::create(word.trim().to_string(), translation.trim().to_string()).persist();
+    cards.push(Card::create(word.trim().to_string(), translation.trim().to_string()));
+    save_cards(cards);
 }
 
-pub fn practice() {
+fn save_cards(cards: &Vec<Card>) {
+    let mut writer = BufWriter::new(create_or_open(CARDS_FILE).unwrap());
+    for card in cards {
+        writer.write(card.to_string().as_bytes()).unwrap();
+        writer.write("\n".as_bytes()).unwrap();
+    }
+}
+
+pub fn random_card(cards: &Vec<Card>) -> &Card {
+    let mut rng = rand::thread_rng();
+    let range = Uniform::new_inclusive(0, cards.len() - 1);
+    let index = range.sample(&mut rng);
+    cards.iter().nth(index).unwrap()
+}
+
+pub fn practice(cards: &mut Vec<Card>) {
     // get random word
-    let line = random_line(CARDS_FILE);
-    let card: Card = Card::from_str(line.as_str()).unwrap();
+    let card = random_card(cards);
     println!("{}", card.translation);
     print!("Enter word for this translation: ");
     io::stdout().flush().unwrap();

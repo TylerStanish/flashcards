@@ -9,7 +9,7 @@ use rustyline::{CompletionType, Context};
 use rustyline::{Editor, Helper};
 use std::borrow::Cow;
 
-use crate::cards::{Card, create_card, list_cards, practice};
+use crate::cards::{Card, create_card, list_cards, practice, get_cards};
 use crate::io::create_or_open;
 
 static PROMPT: &str = "> ";
@@ -85,6 +85,7 @@ impl Highlighter for OurHelper {
 impl Helper for OurHelper {}
 
 fn repl<T: rustyline::Helper>(editor: &mut Editor<T>) {
+    let mut cards = get_cards();
     loop {
         let line = editor.readline(PROMPT);
         match line {
@@ -96,8 +97,8 @@ fn repl<T: rustyline::Helper>(editor: &mut Editor<T>) {
                         break;
                     },
                     "ls" => list_cards(),
-                    "practice" => practice(),
-                    "save" => create_card(),
+                    "practice" => practice(&mut cards),
+                    "save" => create_card(&mut cards),
                     "" => (),
                     _ => println!("Options: {:?}", &["ls", "practice", "save"]),
                 };
@@ -117,7 +118,7 @@ pub fn start() {
     let mut editor = Editor::<OurHelper>::new();
     editor.set_helper(Some(OurHelper::new()));
     // TODO don't unwrap, instead create the history file if it doesn't exist
-    create_or_open(HISTORY_FILE).expect("Could not open history file");
+    create_or_open(HISTORY_FILE);
     editor.load_history(HISTORY_FILE).unwrap();
     repl(&mut editor);
 }
