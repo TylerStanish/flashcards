@@ -36,9 +36,9 @@ def main():
     # add flags for last practiced, least
     #practiced, weakest words, etc priority?
     args = parser.parse_args()
+    load_cards()
     if args.mode == 'ls':
         # list all cards
-        load_cards()
         pager(format_cards())
     elif args.mode == 'create':
         # create a card
