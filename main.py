@@ -3,6 +3,7 @@ from datetime import datetime
 import json
 from os import path
 from pydoc import pager
+import random
 import sys
 
 
@@ -52,7 +53,13 @@ def main():
         save_cards()
     elif args.mode == 'practice':
         # practice a card
-        print('practicing')
+        card = random.choice(list(cards.values()))
+        print(f'Enter Spanish for {card["en"]}: ')
+        ans = input()
+        if ans != card['sp']:
+            print(f'Incorrect! Answer is {card["sp"]}')
+        else:
+            print('Correct!')
     else:
         # if done correctly, the argument parser should never allow this code to
         # reach here
